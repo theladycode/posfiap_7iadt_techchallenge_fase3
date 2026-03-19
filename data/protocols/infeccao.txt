@@ -1,0 +1,4 @@
+Protocolo de infecção:
+Pacientes com febre devem realizar hemograma e PCR.
+Monitorar sinais vitais.
+Em caso de piora clínica, considerar internação.

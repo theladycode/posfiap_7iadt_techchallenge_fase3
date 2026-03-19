@@ -1,0 +1,43 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# Environment variables (CRÍTICO por causa de API keys)
+.env
+.env.*
+
+# Logs
+*.log
+
+# SQLite (se usar)
+*.sqlite3
+
+# FastAPI / Uvicorn
+*.pid
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+
+# Test / coverage
+.coverage
+htmlcov/
+
+# Build
+dist/
+build/
+
+# Jupyter (se usar com IA)
+.ipynb_checkpoints/
+
+# LangChain / AI (às vezes gera arquivos temporários)
+*.jsonl
