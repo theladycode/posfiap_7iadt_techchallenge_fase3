@@ -19,12 +19,29 @@ def load_protocol_context(state: AssistantState) -> AssistantState:
 
 
 def generate_llm_response(state: AssistantState) -> AssistantState:
-    answer = generate_answer(
+    llm_result = generate_answer(
         question=state["question"],
+        context=state["context"],
         patient_context=state["patient_context"],
         protocol_context=state["protocol_context"],
     )
-    state["answer"] = answer
+
+    state["answer"] = llm_result["answer"]
+    state["llm_provider"] = llm_result.get("provider", "unknown")
+    state["model_name"] = llm_result.get("model_name", "")
+    state["supporting_model_output"] = llm_result.get("supporting_model_output", "")
+
+    if state["llm_provider"] == "hybrid":
+        state["sources"] = [
+            *state["sources"],
+            "fine_tuned_biomedical_model",
+            "openai_gpt_4o_mini",
+        ]
+    elif state["llm_provider"] == "finetuned":
+        state["sources"] = [*state["sources"], "fine_tuned_biomedical_model"]
+    else:
+        state["sources"] = [*state["sources"], "openai_gpt_4o_mini"]
+
     return state
 
 

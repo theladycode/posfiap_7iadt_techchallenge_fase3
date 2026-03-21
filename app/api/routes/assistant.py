@@ -11,6 +11,7 @@ def query_assistant(request: AssistantRequest):
         "patient_id": request.patient_id,
         "question": request.question,
         "user_role": request.user_role,
+        "context": request.context or "",
         "patient_context": "",
         "protocol_context": "",
         "answer": "",
@@ -18,6 +19,9 @@ def query_assistant(request: AssistantRequest):
         "risk_level": "low",
         "requires_human_validation": False,
         "audit_log": {},
+        "llm_provider": "",
+        "model_name": "",
+        "supporting_model_output": "",
     }
 
     result = assistant_workflow.invoke(initial_state)

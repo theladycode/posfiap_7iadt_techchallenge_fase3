@@ -7,6 +7,7 @@ Este projeto implementa um **assistente médico virtual inteligente**, capaz de 
 - Modelos de linguagem (LLM)
 - Fluxos de decisão estruturados (LangGraph)
 - Recuperação de informação com RAG (Retrieval-Augmented Generation)
+- Modelo biomédico fine-tuned (PubMedQA)
 
 ---
 
@@ -19,12 +20,45 @@ Simular um sistema hospitalar avançado capaz de:
 - Identificar riscos nas respostas
 - Garantir rastreabilidade (auditoria)
 - Utilizar dados contextuais do paciente
+- Combinar múltiplos modelos (estratégia híbrida)
 
 ---
 
 ## Arquitetura
 
 O sistema utiliza um **workflow baseado em LangGraph**, estruturando o fluxo de decisão:
+```bash
+load_patient_context
+        ↓
+load_protocol_context
+        ↓
+generate_llm_response
+        ↓
+validate_risk
+        ↓
+create_audit
+```
+
+### Providers e LLM
+O sistema suporta múltiplos providers:
+
+- openai: GPT-4o-mini
+- finetuned: Modelo biomédico (Qwen3.5 fine-tuned PubMedQA)
+- hybrid: Combina evidência científica + resposta clínica
+
+#### Auditoria
+Cada requisição gera logs estruturados:
+```bash
+{
+  "timestamp": "...",
+  "patient_id": "123",
+  "question": "...",
+  "answer": "...",
+  "risk_level": "high",
+  "requires_human_validation": true,
+  "llm_provider": "hybrid"
+}
+```
 
 ## 🛠️ Instalação e execução
 
@@ -46,3 +80,9 @@ O sistema utiliza um **workflow baseado em LangGraph**, estruturando o fluxo de 
    ```bash
    pip install -r requirements.txt
    ```
+3. Executar a API
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+   A API estará disponível em:
+      http://localhost:8000

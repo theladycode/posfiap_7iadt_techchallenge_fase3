@@ -1,29 +1,60 @@
-from openai import OpenAI
+import logging
+
 from app.core.settings import settings
-from app.core.config import AppConfig
+from app.services.providers.openai_provider import generate_openai_answer
 
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+logger = logging.getLogger(__name__)
 
 
-def generate_answer(question: str, patient_context: str, protocol_context: str) -> str:
-    prompt = f"""
-Contexto do paciente:
-{patient_context}
+def generate_answer(
+    question: str,
+    context: str,
+    patient_context: str,
+    protocol_context: str,
+) -> dict:
+    provider = settings.LLM_PROVIDER.lower()
 
-Contexto do protocolo:
-{protocol_context}
+    logger.info("Gerando resposta com provider: %s", provider)
 
-Pergunta:
-{question}
-"""
+    if provider == "finetuned":
+        from app.services.providers.finetuned_provider import generate_finetuned_answer
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": AppConfig.SYSTEM_PROMPT},
-            {"role": "user", "content": prompt},
-        ],
-        temperature=AppConfig.DEFAULT_TEMPERATURE,
+        return generate_finetuned_answer(
+            question=question,
+            context=context,
+            patient_context=patient_context,
+            protocol_context=protocol_context,
+        )
+
+    if provider == "hybrid":
+        from app.services.providers.finetuned_provider import generate_finetuned_answer
+
+        fine_tuned_result = generate_finetuned_answer(
+            question=question,
+            context=context,
+            patient_context=patient_context,
+            protocol_context=protocol_context,
+        )
+
+        openai_result = generate_openai_answer(
+            question=question,
+            context=context,
+            patient_context=patient_context,
+            protocol_context=protocol_context,
+            supporting_context=fine_tuned_result["answer"],
+        )
+
+        return {
+            "answer": openai_result["answer"],
+            "provider": "hybrid",
+            "model_name": f'{openai_result["model_name"]} + {fine_tuned_result["model_name"]}',
+            "supporting_model_output": fine_tuned_result["answer"],
+            "supporting_decision": fine_tuned_result["decision"],
+        }
+
+    return generate_openai_answer(
+        question=question,
+        context=context,
+        patient_context=patient_context,
+        protocol_context=protocol_context,
     )
-
-    return response.choices[0].message.content or ""

@@ -1,0 +1,20 @@
+# ============================================================
+# Dependencias para fine-tuning do Qwen3.5 com Unsloth
+# ============================================================
+# Instale com: pip install -r requirements-train.txt
+#
+# IMPORTANTE: Requer GPU NVIDIA com CUDA.
+# Unsloth instala automaticamente torch e transformers v5+.
+# ============================================================
+
+unsloth
+unsloth_zoo
+
+trl>=0.12.0
+
+datasets>=3.0.0
+
+huggingface-hub>=0.24.0
+
+python-dotenv>=1.0.0
+accelerate>=0.34.0

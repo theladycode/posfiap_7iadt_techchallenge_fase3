@@ -11,4 +11,7 @@ def create_audit_log(state: Dict[str, Any]) -> Dict[str, Any]:
         "sources": state["sources"],
         "risk_level": state["risk_level"],
         "requires_human_validation": state["requires_human_validation"],
+        "llm_provider": state.get("llm_provider", ""),
+        "model_name": state.get("model_name", ""),
+        "supporting_model_output": state.get("supporting_model_output", ""),
     }

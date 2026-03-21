@@ -5,6 +5,7 @@ class AssistantState(TypedDict):
     patient_id: str
     question: str
     user_role: str
+    context: str
     patient_context: str
     protocol_context: str
     answer: str
@@ -12,3 +13,6 @@ class AssistantState(TypedDict):
     risk_level: str
     requires_human_validation: bool
     audit_log: Dict[str, Any]
+    llm_provider: str
+    model_name: str
+    supporting_model_output: str
