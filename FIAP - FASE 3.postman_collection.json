@@ -1,0 +1,39 @@
+{
+	"info": {
+		"_postman_id": "1ba2e932-6b1f-4014-bd5c-4868f30bb3c9",
+		"name": "FIAP - FASE 3",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27864922"
+	},
+	"item": [
+		{
+			"name": "Medical Assistant",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"patient_id\": \"123\",\r\n  \"question\": \"Does regular exercise reduce cardiovascular disease risk?\",\r\n  \"user_role\": \"doctor\",\r\n  \"context\": \"A meta-analysis of 30 randomized controlled trials found that regular aerobic exercise reduced blood pressure and improved cardiovascular risk markers.\"\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/assistant/query",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"assistant",
+						"query"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
