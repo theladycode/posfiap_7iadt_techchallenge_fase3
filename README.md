@@ -1,4 +1,6 @@
-Medical Assistant API (AI + RAG + LangGraph)
+# Pós Tech FIAP Fase 3
+
+##Medical Assistant API (AI + RAG + LangGraph)
 
 Este projeto implementa um **assistente médico virtual inteligente**, capaz de auxiliar profissionais de saúde com base em:
 
