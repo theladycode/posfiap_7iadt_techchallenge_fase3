@@ -4,16 +4,12 @@ import time
 from pathlib import Path
 from typing import Optional
 
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
 from app.core.settings import settings
 from app.schemas.finetuned import DecisionEnum
 
 logger = logging.getLogger(__name__)
 audit_logger = logging.getLogger("audit")
 
-_FORCE_CPU = settings.FORCE_CPU
 
 SYSTEM_PROMPT = (
     "You are a biomedical research assistant specialized in answering questions "
@@ -29,16 +25,11 @@ SYSTEM_PROMPT = (
 
 class ModelManager:
     def __init__(self):
-        self._model: Optional[AutoModelForCausalLM] = None
-        self._tokenizer: Optional[AutoTokenizer] = None
+        self._model = None
+        self._tokenizer = None
         self._model_name: str = ""
-
-        if _FORCE_CPU:
-            self._device = "cpu"
-        else:
-            self._device = "cuda" if torch.cuda.is_available() else "cpu"
-
-        logger.info("Modelo fine-tuned configurado para rodar em: %s", self._device)
+        self._device: Optional[str] = None
+        self._torch = None
 
     @property
     def is_loaded(self) -> bool:
@@ -50,21 +41,36 @@ class ModelManager:
 
     @property
     def device(self) -> str:
-        return self._device
+        return self._device or "unknown"
+
+    def _ensure_runtime_imports(self):
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        self._torch = torch
+        return torch, AutoModelForCausalLM, AutoTokenizer
+
+    def _resolve_device(self):
+        torch, _, _ = self._ensure_runtime_imports()
+
+        if settings.FORCE_CPU:
+            self._device = "cpu"
+        else:
+            self._device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        logger.info("Modelo fine-tuned configurado para rodar em: %s", self._device)
 
     def load(self) -> None:
+        torch, AutoModelForCausalLM, AutoTokenizer = self._ensure_runtime_imports()
+
+        if self._device is None:
+            self._resolve_device()
+
         source = self._resolve_model_source(settings.HF_MODEL_ID, settings.MODEL_PATH)
         logger.info("Carregando modelo fine-tuned de: %s", source)
 
         dtype = torch.bfloat16 if self._device == "cuda" else torch.float32
         hf_token = getattr(settings, "HF_TOKEN", "") or None
-
-        if hf_token:
-            logger.info("HF_TOKEN detectado. Carregamento autenticado no Hugging Face.")
-        else:
-            logger.warning(
-                "HF_TOKEN nao configurado. O modelo sera carregado sem autenticacao no Hugging Face."
-            )
 
         tokenizer_kwargs = {
             "pretrained_model_name_or_path": source,
@@ -114,8 +120,8 @@ class ModelManager:
             logger.info("HF_MODEL_ID definido. Carregando do Hugging Face: %s", hf_model_id)
             return hf_model_id
 
-        local_path = Path(model_path)
-        if model_path and local_path.exists() and any(local_path.glob("*.safetensors")):
+        local_path = Path(model_path) if model_path else None
+        if model_path and local_path and local_path.exists() and any(local_path.glob("*.safetensors")):
             logger.info("Modelo local encontrado em: %s", local_path)
             return str(local_path)
 
@@ -151,7 +157,7 @@ class ModelManager:
         )
         inputs = self._tokenizer(text, return_tensors="pt").to(self._device)
 
-        with torch.no_grad():
+        with self._torch.no_grad():
             outputs = self._model.generate(
                 **inputs,
                 max_new_tokens=settings.MAX_NEW_TOKENS,
@@ -167,7 +173,7 @@ class ModelManager:
         elapsed_ms = round((time.time() - started_at) * 1000)
 
         if self._device == "cuda":
-            torch.cuda.empty_cache()
+            self._torch.cuda.empty_cache()
 
         audit_logger.info(
             "INFERENCE | request_id=%s | provider=finetuned | decision=%s | elapsed_ms=%d | model=%s | device=%s",
@@ -204,8 +210,11 @@ class ModelManager:
         return DecisionEnum.unknown
 
 
-_manager = ModelManager()
+_manager: Optional[ModelManager] = None
 
 
 def get_model_manager() -> ModelManager:
+    global _manager
+    if _manager is None:
+        _manager = ModelManager()
     return _manager
