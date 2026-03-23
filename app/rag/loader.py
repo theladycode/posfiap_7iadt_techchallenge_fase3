@@ -9,7 +9,20 @@ def load_documents():
 
     for file in os.listdir(folder_path):
         if file.endswith(".txt"):
-            loader = TextLoader(os.path.join(folder_path, file))
-            docs.extend(loader.load())
+            file_path = os.path.join(folder_path, file)
+
+            try:
+                loader = TextLoader(
+                    file_path,
+                    encoding="utf-8"
+                )
+                docs.extend(loader.load())
+
+            except UnicodeDecodeError:
+                loader = TextLoader(
+                    file_path,
+                    encoding="latin-1"
+                )
+                docs.extend(loader.load())
 
     return docs

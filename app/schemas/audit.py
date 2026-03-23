@@ -1,20 +1,19 @@
-from typing import TypedDict, List, Dict, Any
+from typing import Any, Dict, List
+from pydantic import BaseModel
 
 
-class AssistantState(TypedDict):
+class AuditDetailResponse(BaseModel):
     request_id: str
+    timestamp: str
     patient_id: str
     question: str
     user_role: str
-    context: str
-    patient_context: str
-    protocol_context: str
-    protocol_sources: List[str]
+    context_used: Dict[str, Any]
     answer: str
     sources: List[str]
+    protocol_sources: List[str]
     risk_level: str
     requires_human_validation: bool
-    audit_log: Dict[str, Any]
     llm_provider: str
     model_name: str
     supporting_model_output: str
@@ -25,4 +24,4 @@ class AssistantState(TypedDict):
     started_at: str
     finished_at: str
     duration_ms: int
-    error_message: str
+    error_message: str | None = None

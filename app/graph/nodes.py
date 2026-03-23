@@ -14,6 +14,7 @@ def load_patient_context(state: AssistantState) -> AssistantState:
 def load_protocol_context(state: AssistantState) -> AssistantState:
     protocol_context, protocol_sources = get_protocol_context(state["question"])
     state["protocol_context"] = protocol_context
+    state["protocol_sources"] = protocol_sources
     state["sources"] = ["mock_patient_record", *protocol_sources]
     return state
 
@@ -30,6 +31,10 @@ def generate_llm_response(state: AssistantState) -> AssistantState:
     state["llm_provider"] = llm_result.get("provider", "unknown")
     state["model_name"] = llm_result.get("model_name", "")
     state["supporting_model_output"] = llm_result.get("supporting_model_output", "")
+    state["supporting_decision"] = llm_result.get("supporting_decision", "")
+    state["status"] = llm_result.get("status", "success")
+    state["execution_mode"] = llm_result.get("execution_mode", state["llm_provider"])
+    state["fallback_used"] = llm_result.get("fallback_used", False)
 
     if state["llm_provider"] == "hybrid":
         state["sources"] = [
@@ -43,7 +48,6 @@ def generate_llm_response(state: AssistantState) -> AssistantState:
         state["sources"] = [*state["sources"], "openai_gpt_4o_mini"]
 
     return state
-
 
 def validate_risk(state: AssistantState) -> AssistantState:
     question_lower = state["question"].lower()
